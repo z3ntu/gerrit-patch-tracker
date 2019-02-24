@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import re
+import sys
 
 import git
 from pygerrit2 import GerritRestAPI
@@ -11,6 +12,7 @@ los_repos = [
     'android_external_chromium_org_third_party_openssl',
     'android_external_expat',
     'android_external_freetype',
+    'android_external_libnfc-nci',
     'android_external_libvorbis',
     'android_external_libxml2',
     'android_external_neven',
@@ -62,6 +64,8 @@ def change_id_present(repo_name, change_id, los_merged):
 
 
 def main():
+    print("Getting changes from Gerrit...", file=sys.stderr)
+
     rest = GerritRestAPI(url='https://review.lineageos.org')
     changes = rest.get("/changes/?q=branch:cm-11.0")
     # Go through all pages (we only get 500 per request)
@@ -73,6 +77,7 @@ def main():
     asbre = re.compile(r"^(?:cm-11-)?asb-\d{4}\.\d{2}(?:\.\d{2})?(?:-cm11|-cm-11.0)?$")
     asb_dict = {}
 
+    print("Filtering changes by topic...", file=sys.stderr)
     for change in changes:
         if "topic" in change:
             topic = change["topic"]
@@ -81,6 +86,7 @@ def main():
                     asb_dict[topic] = []
                 asb_dict[topic].append(change)
 
+    print("Iterating through {} ASB changes...".format(len(changes)), file=sys.stderr)
     for asb, changes in sorted(asb_dict.items()):
         print("*{}*\n".format(asb))
         for change in changes:
