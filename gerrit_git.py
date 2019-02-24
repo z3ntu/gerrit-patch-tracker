@@ -83,6 +83,7 @@ def main():
     while "_more_changes" in changes[-1]:
         newchanges = rest.get("/changes/?q=branch:cm-11.0&start=" + str(len(changes)))
         changes.extend(newchanges)
+    print("Got {} changes...".format(len(changes)), file=sys.stderr)
 
     # Matches the many different topic names that were used over the years, see https://pastebin.com/raw/d4sSPihB
     asbre = re.compile(r"^(?:cm-11-)?asb-\d{4}\.\d{2}(?:\.\d{2})?(?:-cm11|-cm-11.0)?$")
@@ -97,7 +98,7 @@ def main():
                     asb_dict[topic] = []
                 asb_dict[topic].append(change)
 
-    print("Iterating through {} ASB changes...".format(len(changes)), file=sys.stderr)
+    print("Iterating through {} ASB topics...".format(len(asb_dict)), file=sys.stderr)
     merged = 0
     total = 0
     for asb, changes in sorted(asb_dict.items()):
@@ -112,6 +113,9 @@ def main():
             change_id = change["change_id"]
             # Ignore the repos in that list
             if repo in ignore_repos:
+                continue
+            # Ignore changes in that list
+            if change["_number"] in ignore_changes:
                 continue
 
             present = change_id_present(repo, change_id, change["status"] == "MERGED")
