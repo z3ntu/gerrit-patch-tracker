@@ -21,9 +21,10 @@ los_repos = [
     'android_system_media'
 ]
 
-# Ignore these repos
+# Ignore these repos (unused ones)
 ignore_repos = [
-    'android', # Manifest changes
+    'android',
+    'android_bootable_recovery',
     'android_bootable_recovery-cm',
     'android_hardware_qcom_audio',
     'android_hardware_qcom_audio-caf',
@@ -33,6 +34,16 @@ ignore_repos = [
     'android_kernel_samsung_smdk4412'
 ]
 
+ignore_asb = [
+    'asb-2017.07.05-cm-11.0'
+]
+
+ignore_changes = [
+    143014, # Revert of non-existing commit
+    127580, # Nfc: not used
+    4776, 4775, 162887, 162888, # Dalvik: MTK removed files
+    236196, 234632 # BT: 'HID Device Role' doesn't exist
+]
 
 def change_id_present(repo_name, change_id, los_merged):
     if repo_name in los_repos:
@@ -87,7 +98,11 @@ def main():
                 asb_dict[topic].append(change)
 
     print("Iterating through {} ASB changes...".format(len(changes)), file=sys.stderr)
+    merged = 0
+    total = 0
     for asb, changes in sorted(asb_dict.items()):
+        if asb in ignore_asb:
+            continue
         print("*{}*\n".format(asb))
         for change in changes:
             if change["status"] == "ABANDONED":
@@ -102,10 +117,13 @@ def main():
             present = change_id_present(repo, change_id, change["status"] == "MERGED")
             if present:
                 mystr = "- [x]"
+                merged += 1
             else:
                 mystr = "- [ ]"
+            total += 1
             print("{} {} {}".format(mystr, change["_number"], repo))
         print()
+    print("Merged: {} - Total: {}".format(merged, total))
 
 
 if __name__ == '__main__':
