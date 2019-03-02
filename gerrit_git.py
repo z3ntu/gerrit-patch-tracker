@@ -78,6 +78,7 @@ def main():
     print("Getting changes from Gerrit...", file=sys.stderr)
 
     query = "branch:cm-11.0"
+    #query = "topic:asb-2019.02-cm11"
     rest = GerritRestAPI(url='https://review.lineageos.org')
     changes = rest.get("/changes/?q={}".format(query))
     # Go through all pages (we only get 500 per request)
@@ -119,14 +120,18 @@ def main():
             if change["_number"] in ignore_changes:
                 continue
 
-            present = change_id_present(repo, change_id, change["status"] == "MERGED")
-            if present:
+            if change_id_present(repo, change_id, change["status"] == "MERGED"):
                 mystr = "- [x]"
                 merged += 1
             else:
                 mystr = "- [ ]"
+
+            if change["status"] == "NEW":
+                warning = " (warning: not merged yet)"
+            else:
+                warning = ""
             total += 1
-            print("{} {} {}".format(mystr, change["_number"], repo))
+            print("{} {} {}{}".format(mystr, change["_number"], repo, warning))
         print()
     print("Merged: {} - Total: {}".format(merged, total))
 
