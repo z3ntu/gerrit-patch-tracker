@@ -77,11 +77,12 @@ def change_id_present(repo_name, change_id, los_merged):
 def main():
     print("Getting changes from Gerrit...", file=sys.stderr)
 
+    query = "branch:cm-11.0"
     rest = GerritRestAPI(url='https://review.lineageos.org')
-    changes = rest.get("/changes/?q=branch:cm-11.0")
+    changes = rest.get("/changes/?q={}".format(query))
     # Go through all pages (we only get 500 per request)
     while "_more_changes" in changes[-1]:
-        newchanges = rest.get("/changes/?q=branch:cm-11.0&start=" + str(len(changes)))
+        newchanges = rest.get("/changes/?q={}&start={}".format(query, str(len(changes))))
         changes.extend(newchanges)
     print("Got {} changes...".format(len(changes)), file=sys.stderr)
 
