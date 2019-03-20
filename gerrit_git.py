@@ -42,7 +42,7 @@ ignore_changes = [
     143014, # Revert of non-existing commit
     127580, # Nfc: not used
     4776, 4775, 162887, 162888, # Dalvik: MTK removed files
-    236196, 234632 # BT: 'HID Device Role' doesn't exist
+    236196, 234632, 241451 # BT: 'HID Device Role' doesn't exist
 ]
 
 def change_id_present(repo_name, change_id, los_merged):
