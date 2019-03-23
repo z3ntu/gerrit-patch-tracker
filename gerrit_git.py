@@ -2,6 +2,7 @@
 
 import re
 import sys
+import json
 
 import git
 from pygerrit2 import GerritRestAPI
@@ -75,17 +76,26 @@ def change_id_present(repo_name, change_id, los_merged):
 
 
 def main():
-    print("Getting changes from Gerrit...", file=sys.stderr)
+    if len(sys.argv) > 1 and sys.argv[1] == "--no-download":
+        print("Using cached version of changes...", file=sys.stderr)
+        with open('changes.json', 'r') as f:
+            changes = json.loads(f.read())
+    else:
+        print("Getting changes from Gerrit...", file=sys.stderr)
 
-    query = "branch:cm-11.0"
-    #query = "topic:asb-2019.02-cm11"
-    rest = GerritRestAPI(url='https://review.lineageos.org')
-    changes = rest.get("/changes/?q={}".format(query))
-    # Go through all pages (we only get 500 per request)
-    while "_more_changes" in changes[-1]:
-        newchanges = rest.get("/changes/?q={}&start={}".format(query, str(len(changes))))
-        changes.extend(newchanges)
-    print("Got {} changes...".format(len(changes)), file=sys.stderr)
+        query = "branch:cm-11.0"
+        #query = "topic:asb-2019.02-cm11"
+        rest = GerritRestAPI(url='https://review.lineageos.org')
+        changes = rest.get("/changes/?q={}".format(query))
+        # Go through all pages (we only get 500 per request)
+        while "_more_changes" in changes[-1]:
+            newchanges = rest.get("/changes/?q={}&start={}".format(query, str(len(changes))))
+            changes.extend(newchanges)
+        print("Got {} changes...".format(len(changes)), file=sys.stderr)
+        # Write json to file
+        with open('changes.json', 'w') as f:
+            print("Writing changes as json to changes.json...", file=sys.stderr)
+            f.write(json.dumps(changes))
 
     # Matches the many different topic names that were used over the years, see https://pastebin.com/raw/d4sSPihB
     asbre = re.compile(r"^(?:cm-11-)?asb-\d{4}\.\d{2}(?:\.\d{2})?(?:-cm11|-cm-11.0)?$")
