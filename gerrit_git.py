@@ -51,9 +51,16 @@ def change_id_present(repo_name, change_id, los_merged):
         return los_merged
 
     try:
-        repo = git.Repo("/root/mtk-repos/" + repo_name, odbt=git.GitDB)
+        # Convert repo names to directory names
+        # wpa_supplicant_8 is a special case as it has underscores in the directory name
+        if repo_name == "android_external_wpa_supplicant_8":
+            directory_name = "external/wpa_supplicant_8"
+        else:
+            directory_name = repo_name.replace("android_", "").replace("_", "/")
+        repo = git.Repo("/mnt/data2/mtk-aosp/" + directory_name, odbt=git.GitDB)
     except git.exc.NoSuchPathError:
         print("**WARNING: Failed to find repository: " + repo_name + " which is needed for applying this ASB!")
+        print("**WARNING: Failed to find repository: " + repo_name + " which is needed for applying this ASB!", file=sys.stderr)
         return False
 
     head = None
@@ -62,7 +69,7 @@ def change_id_present(repo_name, change_id, los_merged):
             head = rhead
             break
     if head is None:
-        raise RuntimeError("Failed to find mtk-4.4.4 head!")
+        raise RuntimeError("Failed to find mtk-4.4.4 head in repository {}!".format(repo_name))
 
     chid_str = "Change-Id: " + change_id
     # iter_parents() below doesn't look at head.commit
